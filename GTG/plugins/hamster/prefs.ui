@@ -61,6 +61,44 @@
               </packing>
             </child>
             <child>
+              <object class="GtkRadioButton" id="activity_custom">
+                <property name="label" translatable="yes">Custom:</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="active">True</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">activity_tag</property>
+                <signal name="toggled" handler="activity_custom_toggled"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="activity_custom_text">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="tooltip_text" translatable="yes">Use {{title}}, {{parenttitle}}.
+Text between the starting braces `{{` or ending braces `}}` will only be included if said item exists.
+E.g.: {{parenttitle}: }{{title}}
+will have activity "A: B" if the task started is B and is a subtask of A.
+Otherwise if "B" is a top-level task, it will just be "B".</property>
+                <property name="margin_left">25</property>
+                <property name="editable">False</property>
+                <property name="width_chars">0</property>
+                <property name="shadow_type">out</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="text">{{parenttitle}: }{{title}}</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">4</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkLabel" id="label2">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
@@ -72,7 +110,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="padding">6</property>
-                <property name="position">3</property>
+                <property name="position">5</property>
               </packing>
             </child>
             <child>
@@ -86,7 +124,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">4</property>
+                <property name="position">6</property>
               </packing>
             </child>
             <child>
@@ -101,7 +139,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">5</property>
+                <property name="position">7</property>
               </packing>
             </child>
             <child>
@@ -115,7 +153,7 @@
                 <property name="group">category_auto</property>
               </object>
               <packing>
-                <property name="position">6</property>
+                <property name="position">8</property>
               </packing>
             </child>
             <child>
@@ -130,7 +168,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="padding">6</property>
-                <property name="position">7</property>
+                <property name="position">9</property>
               </packing>
             </child>
             <child>
@@ -144,7 +182,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">8</property>
+                <property name="position">10</property>
               </packing>
             </child>
             <child>
@@ -159,7 +197,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">9</property>
+                <property name="position">11</property>
               </packing>
             </child>
             <child>
@@ -174,7 +212,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">10</property>
+                <property name="position">12</property>
               </packing>
             </child>
             <child>
@@ -189,7 +227,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="padding">6</property>
-                <property name="position">11</property>
+                <property name="position">13</property>
               </packing>
             </child>
             <child>
@@ -203,7 +241,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">12</property>
+                <property name="position">14</property>
               </packing>
             </child>
             <child>
@@ -218,7 +256,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">13</property>
+                <property name="position">15</property>
               </packing>
             </child>
             <child>
@@ -233,7 +271,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">14</property>
+                <property name="position">16</property>
               </packing>
             </child>
           </object>

@@ -396,6 +396,8 @@ class hamsterPlugin:
         pref_to_dialog("description")
         pref_to_dialog("tags")
 
+        self.on_activity_custom_toggled()
+
         self.preferences_dialog.show_all()
 
     def on_preferences_close(self, widget=None, data=None):
@@ -406,7 +408,8 @@ class hamsterPlugin:
                     self.preferences[pref] = val
                     break
 
-        dialog_to_pref("activity", ["tag", "title"])
+        dialog_to_pref("activity", ["tag", "title", "custom"])
+        self.preferences["activity_custom_format"] = self.builder.get_object("activity_custom_text").get_text()
         dialog_to_pref("category", ["auto", "tag", "auto_tag"])
         dialog_to_pref("description", ["title", "contents", "none"])
         dialog_to_pref("tags", ["all", "existing", "none"])
@@ -425,6 +428,15 @@ class hamsterPlugin:
                                                   "preferences",
                                                   self.preferences)
 
+    def on_activity_custom_toggled(self, widget=None, data=None):
+        # widget is the radio button for activity_custom
+        entry = self.builder.get_object("activity_custom_text")
+        if not widget:
+            widget = self.builder.get_object("activity_custom")
+
+        entry.set_sensitive(widget.get_active())
+        return True
+
     def preference_dialog_init(self):
         self.builder = Gtk.Builder()
         path = "%s/prefs.ui" % os.path.dirname(os.path.abspath(__file__))
@@ -432,6 +444,7 @@ class hamsterPlugin:
         self.preferences_dialog = self.builder.get_object("dialog1")
         SIGNAL_CONNECTIONS_DIC = {
             "prefs_close": self.on_preferences_close,
+            "activity_custom_toggled": self.on_activity_custom_toggled,
         }
         self.builder.connect_signals(SIGNAL_CONNECTIONS_DIC)
 
