@@ -27,6 +27,7 @@ import datetime
 
 from GTG import _
 from GTG.core.task import Task
+import hamster.client
 
 
 class hamsterPlugin:
@@ -77,7 +78,8 @@ class hamsterPlugin:
         activity = "Other"
         if self.preferences['activity'] == 'tag':
             hamster_activities = set([str(x[0]).lower()
-                                      for x in self.hamster.GetActivities('')])
+                                      for x in
+                                      self.hamster.get_activities('')])
             activity_candidates = hamster_activities.intersection(
                 set(gtg_tags))
             if len(activity_candidates) >= 1:
@@ -92,7 +94,7 @@ class hamsterPlugin:
         if self.preferences['category'] == 'auto_tag':
             hamster_activities = dict([(str(x[0]), unicode(x[1]))
                                        for x in
-                                       self.hamster.GetActivities('')])
+                                       self.hamster.get_activities('')])
             if (gtg_title in hamster_activities
                     or gtg_title.replace(",", "") in hamster_activities):
                     category = "%s" % hamster_activities[gtg_title]
@@ -101,7 +103,7 @@ class hamsterPlugin:
            (self.preferences['category'] == 'auto_tag' and not category)):
             # See if any of the tags match existing categories
             categories = dict([(str(x[1]).lower(), str(x[1]))
-                               for x in self.hamster.GetCategories()])
+                               for x in self.hamster.get_categories()])
             lower_gtg_tags = set([x.lower() for x in gtg_tags])
             intersection = set(categories.keys()).intersection(lower_gtg_tags)
             if len(intersection) > 0:
@@ -121,23 +123,20 @@ class hamsterPlugin:
         try:
             if self.preferences['tags'] == 'existing':
                 hamster_tags = set([str(x[1]) for x in
-                                    self.hamster.GetTags(False)])
+                                    self.hamster.get_tags(False)])
                 tag_candidates = list(hamster_tags.intersection(set(gtg_tags)))
             elif self.preferences['tags'] == 'all':
                 tag_candidates = gtg_tags
         except dbus.exceptions.DBusException:
             # old hamster version, doesn't support tags
             pass
-        tag_str = "".join([" #" + x for x in tag_candidates])
 
-        # Format of first argument of AddFact -
-        # `[-]start_time[-end_time] activity@category, description #tag1 #tag2`
-        fact = activity
-        if category:
-            fact += "@%s" % category
-        fact += ",%s%s" % (description, tag_str)
-        start_time = timegm(datetime.datetime.now().timetuple())
-        hamster_id = self.hamster.AddFact(fact, start_time, 0, False)
+        # TODO: try doing the same activity in two sessions.
+        fact = hamster.client.Fact(activity, category=category,
+                                   description=description,
+                                   tags=tag_candidates,
+                                   start_time=datetime.datetime.now())
+        hamster_id = self.hamster.add_fact(fact, temporary_activity=False)
 
         ids = self.get_hamster_ids(task)
         ids.append(str(hamster_id))
@@ -165,13 +164,15 @@ class hamsterPlugin:
         return records
 
     def get_active_id(self):
-        todays_facts = self.hamster.GetTodaysFacts()
-        if todays_facts and todays_facts[-1][2] == 0:
+        todays_facts = self.hamster.get_todays_facts()
+        if todays_facts and not todays_facts[-1].end_time:
             # todays_facts is a list. todays_facts[-1] gives the latest fact
-            # if todays_facts[-1][-1] is the start time, and
-            # todays_facts[-1][-2] is the end time of the fact (value 0 means
-            # it is still being tracked upon which we return id of the fact)
-            return todays_facts[-1][0]
+            # if todays_facts[-1].start_time is the start time, and
+            # todays_facts[-1].end_time is the end time of the fact (value 0
+            # means it is still being tracked upon which we return id of the
+            # fact)
+            # TODO test (I think it might return a string?)
+            return todays_facts[-1].id
         else:
             return None
 
@@ -182,11 +183,12 @@ class hamsterPlugin:
 
     def stop_task(self, task):
         if self.is_task_active(task):
-            now = timegm(datetime.datetime.now().timetuple())
+            now = datetime.datetime.now()
             # Hamster deletes an activity if it's finish time is set earlier
             # than current time. Hence, we are setting finish time
             # some buffer secs from now
-            self.hamster.StopTracking(now + self.BUFFER_TIME)
+            self.hamster.stop_tracking(now +
+                                       datetime.timedelta(0, self.BUFFER_TIME))
 
     #### Datastore
     def get_hamster_ids(self, task):
@@ -232,8 +234,7 @@ class hamsterPlugin:
     #### Plugin api methods
     def activate(self, plugin_api):
         self.plugin_api = plugin_api
-        self.hamster = dbus.SessionBus().get_object('org.gnome.Hamster',
-                                                    '/org/gnome/Hamster')
+        self.hamster = hamster.client.Storage()
 
         # add menu item
         if plugin_api.is_browser():
