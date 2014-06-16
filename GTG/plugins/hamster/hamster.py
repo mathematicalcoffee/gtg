@@ -84,6 +84,10 @@ class hamsterPlugin:
                 activity = list(activity_candidates)[0]
         elif self.preferences['activity'] == 'title':
             activity = gtg_title
+        elif self.preferences['activity'] == 'custom':
+            activity_str = self.preferences['activity_custom_format']
+            activity = parse_format(activity_str, task)
+
         # hamster can't handle ',' or '@' in activity name
         activity = activity.replace(',', '')
         activity = re.sub('\ +@.*', '', activity)
@@ -489,3 +493,41 @@ def format_duration(minutes):
         formatted_duration += "%dh %dmin" % (hours, minutes % 60)
 
     return formatted_duration
+
+def parse_format(format, task):
+    '''
+    Acceptable tokens: {{title}}, {{parenttitle}}.
+    Text between the starting {{ or ending }} is included only if that token exists.
+    But don't use '{' or '}' in said text...
+    E.g. {{parenttitle}: } will be "A: " if the current task is a subtask of A and ""
+     otherwise.
+
+    Tags are '# foo' '# bar' (@ stripped)
+    '''
+    def make_substitution(matchobj):
+        repl = None
+        token = matchobj.group(2).lower()
+        
+        if token == 'title':
+            repl = task.get_title()
+        elif token == 'tags':
+            gtg_tags = [t.lstrip('@').lower() for t in task.get_tags_name()]
+            repl = "".join([" #" + x for x in gtg_tags])
+        elif token == "parenttitle":
+            if task.has_parent():
+                par = task.req.get_task(task.get_parents()[0])
+                repl = par.get_title()
+        elif token == "description":
+            repl = task.get_excerpt(strip_tags=True,
+                                    strip_subtasks=True)
+
+        # TODO: check for no (title|tags|desc) and set to None
+        if repl is None:
+            return ''
+        else:
+            return matchobj.group(1) + repl + matchobj.group(3)
+
+    return re.sub(r'\{([^{]*?)\{(title|parenttitle)\}([^}]*?)\}',
+                  make_substitution,
+                  format,
+                  flags=re.IGNORECASE)
